@@ -43,7 +43,7 @@ def random_error_response(func):
 @random_error_response
 def create():
     json_content = request.get_json(force=True)
-    LOG.info(f"json data is: {json_content}")
+    LOG.debug(f"json data is: {json_content}")
     if 'groupId' in json_content:
         if json_content['groupId'] in GROUPS:
             LOG.info("group id already exists")
@@ -63,6 +63,31 @@ def get(groupId):
     return Response(
         status=200,
         response=json.dumps(response_dict) + '\n',
+    )
+
+
+@app.route('/v1/group/', methods=['DELETE'])
+@random_error_response
+def delete():
+    json_content = request.get_json(force=True)
+    LOG.debug(f"json data is: {json_content}")
+    if 'groupId' in json_content:
+        if json_content['groupId'] not in GROUPS:
+            LOG.info("group not found")
+            return Response(status=404)
+        GROUPS.remove(json_content['groupId'])
+        return Response(status=200)
+    LOG.info("invalid request")
+    return Response(status=500)
+
+@app.route('/v1/group/all/', methods=['GET'])
+def test_endpoint():
+    """This is a test endpoint, only to be used for verification. This
+       is not subhect to potential random error responses
+    """
+    return Response(
+        status=200,
+        response=json.dumps(GROUPS) + '\n',
     )
 
 
