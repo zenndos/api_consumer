@@ -60,16 +60,19 @@ def create_group_on_all_hosts(groupId):
                 hosts_for_rollback.append(host)
             else:
                 LOG.info(
-                    "Unexpected response with {response.status_code} from "
-                    "{host} while trying to create {groupId}"
+                    f"Unexpected response with {response.status_code} from "
+                    f"{host} while trying to create {groupId}"
                 )
-                create_group_rollback()
+                try:
+                    create_group_rollback(groupId, hosts_for_rollback)
+                except Exception:
+                    LOG.exception("exception while rollback")
                 return Response(status=response.status_code)
         except Exception:
             LOG.exception("Exception while creating group")
             create_group_rollback(groupId, hosts_for_rollback)
             return Response(status=500)
-        return Response(status=200)
+    return Response(status=200)
 
 
 def delete_group_on_all_hosts(groupId):
@@ -82,19 +85,24 @@ def delete_group_on_all_hosts(groupId):
                 hosts_for_rollback.append(host)
             else:
                 LOG.info(
-                    "Unexpected response with {response.status_code} from "
-                    "{host} while trying to delete {groupId}"
+                    f"Unexpected response with {response.status_code} from "
+                    f"{host} while trying to delete {groupId}"
                 )
-                delete_group_rollback()
+                delete_group_rollback(groupId, hosts_for_rollback)
                 return Response(status=response.status_code)
         except Exception:
             LOG.exception("Exception while creating group")
             delete_group_rollback(groupId, hosts_for_rollback)
             return Response(status=500)
-        return Response(status=200)
+    return Response(status=200)
 
 
 def create_group_rollback(groupId, hosts_for_rollback):
+    for host in hosts_for_rollback:
+        rollback_the_host(delete_group_request, groupId, host)
+
+
+def delete_group_rollback(groupId, hosts_for_rollback):
     for host in hosts_for_rollback:
         rollback_the_host(create_group_request, groupId, host)
 
@@ -107,55 +115,54 @@ def rollback_the_host(rollback_func, groupId, host):
             )
             if rollback_result:
                 LOG.info(
-                    "Successful attempt number {attempt} to rollback {host}"
+                    f"Successful attempt number {attempt} to rollback {host}"
                 )
                 return
-
             LOG.info(
-                "Unsuccessful attempt number {attempt} to rollback {host}"
+                f"Unsuccessful attempt number {attempt} to rollback {host}"
             )
         except Exception:
             LOG.exception(
-                "Exception while making attempt number {attempt} to "
-                "rollback on {host}"
+                f"Exception while making attempt number {attempt} to "
+                f"rollback on {host}"
             )
-    LOG.info("Failed to rollback {host}")
+    LOG.info(f"Failed to rollback {host}")
 
 
 def attempt_to_rollback(rollback_func, groupId, host):
     rollback_response = rollback_func(groupId, host)
-    if response.status_code in (200, 201,):
+    if rollback_response.status_code in (200, 201,):
         get_response = get_group_request(groupId, host)
         if rollback_func == create_group_rollback:
             if get_response.status_code == 200:
                 if groupId in get_response.json()["groupId"]:
                     return True
         elif rollback_func == delete_group_rollback:
-            if response.status_code == 400:
+            if get_response.status_code == 400:
                 return True
     return False
 
 
 def create_group_request(groupId, host):
-    url = "{}:{}".format(host, PORT)
-    response = requests.post(URL, json={"groupId": groupId})
+    url = "http://{}:{}/v1/group/".format(host, PORT)
+    response = requests.post(url, json={"groupId": groupId})
     return response
 
 
 def delete_group_request(groupId, host):
-    url = "{}:{}".format(host, PORT)
-    response = requests.delete(URL, json={"groupId": groupId})
+    url = "http://{}:{}/v1/group/".format(host, PORT)
+    response = requests.delete(url, json={"groupId": groupId})
     return response
 
 def get_group_request(groupId, host):
-    url = "{}:{}".format(host, PORT)
-    response = requests.get(URL, json={"groupId": groupId})
+    url = "http://{}:{}/v1/group/{}".format(host, PORT, groupId)
+    response = requests.get(url, json={"groupId": groupId})
     return response
 
 
 if __name__ == '__main__':
     cherry_py_app = WSGIPathInfoDispatcher({'/': app})
-    hostname = 'localhost'
+    hostname = '0.0.0.0'
     port = 5001
     LOG.info(f"Starting the server on {hostname}:{port}")
     server = WSGIServer((hostname, port), cherry_py_app)
