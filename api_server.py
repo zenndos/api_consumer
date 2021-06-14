@@ -1,4 +1,5 @@
 import time
+import socket
 import random
 
 from functools import wraps
@@ -53,18 +54,6 @@ def create():
     LOG.info("invalid request")
     return Response(status=500)
 
-@app.route('/v1/group/<groupId>', methods=['GET'])
-@random_error_response
-def get(groupId):
-    if groupId not in GROUPS:
-        LOG.info("group not found")
-        return Response(status=400)
-    response_dict = {'groupId': groupId}
-    return Response(
-        status=200,
-        response=json.dumps(response_dict) + '\n',
-    )
-
 
 @app.route('/v1/group/', methods=['DELETE'])
 @random_error_response
@@ -80,6 +69,19 @@ def delete():
     LOG.info("invalid request")
     return Response(status=500)
 
+
+@app.route('/v1/group/<groupId>', methods=['GET'])
+def get(groupId):
+    if groupId not in GROUPS:
+        LOG.info("group not found")
+        return Response(status=400)
+    response_dict = {'groupId': groupId}
+    return Response(
+        status=200,
+        response=json.dumps(response_dict) + '\n',
+    )
+
+
 @app.route('/v1/group/all/', methods=['GET'])
 def test_endpoint():
     """This is a test endpoint, only to be used for verification. This
@@ -93,6 +95,8 @@ def test_endpoint():
 
 if __name__ == '__main__':
     cherry_py_app = WSGIPathInfoDispatcher({'/': app})
-    server = WSGIServer(('localhost', 5000), cherry_py_app)
-    LOG.info("Starting the server")
+    hostname = socket.gethostname()
+    port = 5000
+    LOG.info(f"Starting the server on {hostname}:{port}")
+    server = WSGIServer((hostname, port), cherry_py_app)
     server.start()
