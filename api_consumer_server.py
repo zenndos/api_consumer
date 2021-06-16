@@ -64,15 +64,17 @@ def create_group_on_all_hosts(groupId):
                     f"{host} while trying to create {groupId}"
                 )
                 try:
-                    create_group_rollback(groupId, hosts_for_rollback)
+                    rollback_hosts_with_function(
+                        delete_group_request, groupId, hosts_for_rollback
+                    )
                 except Exception:
                     LOG.exception("exception while rollback")
-                return Response(status=response.status_code)
+                return Response(status=304)
         except Exception:
             LOG.exception("Exception while creating group")
             create_group_rollback(groupId, hosts_for_rollback)
-            return Response(status=500)
-    return Response(status=200)
+            return Response(status=304)
+    return Response(status=201)
 
 
 def delete_group_on_all_hosts(groupId):
@@ -88,32 +90,30 @@ def delete_group_on_all_hosts(groupId):
                     f"Unexpected response with {response.status_code} from "
                     f"{host} while trying to delete {groupId}"
                 )
-                delete_group_rollback(groupId, hosts_for_rollback)
-                return Response(status=response.status_code)
+                rollback_hosts_with_function(
+                    create_group_request, groupId, hosts_for_rollback
+                )
+                return Response(status=304)
         except Exception:
             LOG.exception("Exception while creating group")
             delete_group_rollback(groupId, hosts_for_rollback)
-            return Response(status=500)
+            return Response(status=304)
     return Response(status=200)
 
 
-def create_group_rollback(groupId, hosts_for_rollback):
-    for host in hosts_for_rollback:
-        rollback_the_host(delete_group_request, groupId, host)
+def rollback_hosts_with_function(rollback_function, groupId, hosts):
+    for host in hosts:
+        rollback_the_host(rollback_function, groupId, host)
 
-
-def delete_group_rollback(groupId, hosts_for_rollback):
-    for host in hosts_for_rollback:
-        rollback_the_host(create_group_request, groupId, host)
 
 
 def rollback_the_host(rollback_func, groupId, host):
-    for attempt in range(0, ROLLBACK_ATTEMPT_LIMIT):
+    for attempt in range(1, ROLLBACK_ATTEMPT_LIMIT):
         try:
-            rollback_result = attempt_to_rollback(
+            is_attempt_succeeded = attempt_to_rollback(
                 rollback_func, groupId, host
             )
-            if rollback_result:
+            if is_attempt_succeeded:
                 LOG.info(
                     f"Successful attempt number {attempt} to rollback {host}"
                 )
@@ -130,14 +130,15 @@ def rollback_the_host(rollback_func, groupId, host):
 
 
 def attempt_to_rollback(rollback_func, groupId, host):
+    LOG.debug(f"attempting to rollback with {rollback_func.__name__}")
     rollback_response = rollback_func(groupId, host)
     if rollback_response.status_code in (200, 201,):
         get_response = get_group_request(groupId, host)
-        if rollback_func == create_group_rollback:
+        if rollback_func == create_group_request:
             if get_response.status_code == 200:
                 if groupId in get_response.json()["groupId"]:
                     return True
-        elif rollback_func == delete_group_rollback:
+        elif rollback_func == delete_group_request:
             if get_response.status_code == 400:
                 return True
     return False

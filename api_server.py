@@ -74,7 +74,7 @@ def delete():
 def get(groupId):
     if groupId not in GROUPS:
         LOG.info("group not found")
-        return Response(status=400)
+        return Response(status=404)
     response_dict = {'groupId': groupId}
     return Response(
         status=200,
