@@ -32,7 +32,7 @@ Multiple Create Requests Were Made Towards Consumer At The Same Time
         ${handle}=    Run Keyword Async
         ...    Make Create Group Request Towards Consumer    ${i}    any
     END
-    Wait Async All    timeout=10
+    Wait Async All    timeout=15
 
 Groups Are Equal On All Servers After Short Time
     Wait Until Keyword Succeeds
