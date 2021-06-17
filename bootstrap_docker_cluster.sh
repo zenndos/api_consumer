@@ -1,4 +1,5 @@
 #!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 API_SERVER_IMAGE_NAME=test_server_image
 API_CONSUMER_IMAGE_NAME=test_consumer_image
@@ -32,4 +33,4 @@ docker run -dti --hostname ${HOSTNAME_2} --add-host ${HOSTNAME_2}:${HOST_IP_2} -
 docker run -dti --hostname ${HOSTNAME_3} --add-host ${HOSTNAME_3}:${HOST_IP_3} --name ${CONTAINER_NAME_3} --network ${SUBNET_NAME} ${API_SERVER_IMAGE_NAME}:${IMAGE_TAG}
 set -x
 docker run -dti -p 5001:5001 --name ${API_CONSUMER_CONTAINER_NAME} --ip ${CONSUMER_IP} --network ${SUBNET_NAME} --add-host ${HOSTNAME_1}:${HOST_IP_1} --add-host ${HOSTNAME_2}:${HOST_IP_2} --add-host ${HOSTNAME_3}:${HOST_IP_3} ${API_CONSUMER_IMAGE_NAME}:${IMAGE_TAG}
-docker run -dti --name ${ROBOT_CONTAINER_NAME} --network ${SUBNET_NAME} --add-host ${HOSTNAME_1}:${HOST_IP_1} --add-host ${HOSTNAME_2}:${HOST_IP_2} --add-host ${HOSTNAME_3}:${HOST_IP_3} --entrypoint /bin/bash ${ROBOT_IMAGE_NAME}:${IMAGE_TAG}
+docker run -dti --name ${ROBOT_CONTAINER_NAME} --network ${SUBNET_NAME} --add-host ${HOSTNAME_1}:${HOST_IP_1} --add-host ${HOSTNAME_2}:${HOST_IP_2} --add-host ${HOSTNAME_3}:${HOST_IP_3} -v ${SCRIPT_DIR}/test:/robot/ ${ROBOT_IMAGE_NAME}:${IMAGE_TAG}

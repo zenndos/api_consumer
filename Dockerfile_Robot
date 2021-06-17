@@ -1,6 +1,7 @@
 FROM python:3
 RUN apt update
 RUN apt install -y vim
-RUN python3 -m pip install robotframework
+RUN python -m pip install robotframework
 RUN python -m pip install robotframework-requests
-COPY ./test/test_api_consumer.robot /robot/
+RUN python -m pip install robotframework-run-keyword-async
+CMD ["robot", "--output", "/robot/output", "/robot/test_api_consumer.robot"]

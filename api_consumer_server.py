@@ -44,8 +44,8 @@ def delete():
     json_content = request.get_json(force=True)
     LOG.debug(f"json data is: {json_content}")
     if 'groupId' in json_content:
-        GROUPS.remove(json_content['groupId'])
-        return Response(status=200)
+        response = delete_group_on_all_hosts(json_content['groupId'])
+        return response
     LOG.info("invalid request")
     return Response(status=500)
 
@@ -106,7 +106,6 @@ def rollback_hosts_with_function(rollback_function, groupId, hosts):
         rollback_the_host(rollback_function, groupId, host)
 
 
-
 def rollback_the_host(rollback_func, groupId, host):
     for attempt in range(1, ROLLBACK_ATTEMPT_LIMIT):
         try:
@@ -138,9 +137,17 @@ def attempt_to_rollback(rollback_func, groupId, host):
             if get_response.status_code == 200:
                 if groupId in get_response.json()["groupId"]:
                     return True
+            LOG.debug(
+                f"Expected 200 status code while quering: {groupId} "
+                f"but got {get_response.status_code}"
+            )
         elif rollback_func == delete_group_request:
-            if get_response.status_code == 400:
+            if get_response.status_code == 404:
                 return True
+            LOG.debug(
+                f"Expected 404 status code while quering: {groupId} "
+                f"but got {get_response.status_code}"
+            )
     return False
 
 

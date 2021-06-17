@@ -46,10 +46,12 @@ def create():
     json_content = request.get_json(force=True)
     LOG.debug(f"json data is: {json_content}")
     if 'groupId' in json_content:
-        if json_content['groupId'] in GROUPS:
-            LOG.info("group id already exists")
+        group_id = json_content['groupId']
+        if group_id in GROUPS:
+            LOG.info(f"groupId: {group_id} already exists")
             return Response(status=400)
-        GROUPS.append(json_content['groupId'])
+        GROUPS.append(group_id)
+        LOG.info(f"Successfully created groupId: {group_id}")
         return Response(status=201)
     LOG.info("invalid request")
     return Response(status=500)
@@ -62,11 +64,11 @@ def delete():
     LOG.debug(f"json data is: {json_content}")
     if 'groupId' in json_content:
         if json_content['groupId'] not in GROUPS:
-            LOG.info("group not found")
+            LOG.info("Group not found")
             return Response(status=404)
         GROUPS.remove(json_content['groupId'])
         return Response(status=200)
-    LOG.info("invalid request")
+    LOG.info("Invalid request")
     return Response(status=500)
 
 
