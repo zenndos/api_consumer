@@ -16,7 +16,7 @@ from flask import Response
 from utils import setup_logger
 
 
-LOG = setup_logger()
+LOG = setup_logger('api_consumer')
 
 app = Flask(__name__)
 HOSTS = [
@@ -67,9 +67,10 @@ def create_group_on_all_hosts(groupId):
                     rollback_hosts_with_function(
                         delete_group_request, groupId, hosts_for_rollback
                     )
+                    return Response(status=304)
                 except Exception:
                     LOG.exception("exception while rollback")
-                return Response(status=304)
+                return Response(status=500)
         except Exception:
             LOG.exception("Exception while creating group")
             create_group_rollback(groupId, hosts_for_rollback)

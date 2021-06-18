@@ -1,0 +1,50 @@
+Everything is implemented with REST API.
+
+
+API Server:
+
+CREATE GROUP:
+    endpoint - {host_url}:5000/v1/group/
+    method - POST
+    json_body - {"groupId": "{groupId}"}
+    example - docker exec test_server_1 curl --request POST --data '{"groupId": "19"}' -i http://node02.app.internal.com:5000/v1/group/
+    return_codes: 201, 400, 408, 500
+
+DELETE GROUP:
+    endpoint - {host_url}:5000/v1/group/
+    method - DELETE
+    json_body - {"groupId": "{groupId}"}
+    example - docker exec test_server_1 curl --request DELETE --data '{"groupId": "19"}' -i http://node02.app.internal.com:5000/v1/group/
+    return_codes: 201, 404, 408, 500
+
+GET GROUP:
+    endpoint - {host_url}:5000/v1/group/{group_id}
+    method - GET
+    example - docker exec test_server_1 curl -i http://node02.app.internal.com:5000/v1/group/19
+    return_codes: 200, 404
+
+GET ALL GROUPS (for verification purposes):
+    endpoint - {host_url}:5000/v1/group/all/
+    method - GET
+    example - docker exec test_server_1 curl -i http://node02.app.internal.com:5000/v1/group/all
+    return_codes: 200
+
+API Consumer:
+
+CREATE GROUP:
+    endpoint - {consumer_url}:5000/v1/group/
+    method - POST
+    json_body - {"groupId": "{groupId}"}
+    example - curl --request POST --data '{"groupId": "19"}' -i http://localhost:5001/v1/group/
+    return_codes: 201, 304, 500
+
+DELETE GROUP:
+    endpoint - {consumer_url}:5000/v1/group/
+    method - DELETE
+    json_body - {"groupId": "{groupId}"}
+    example - curl --request DELETE --data '{"groupId": "19"}' -i http://localhost:5001/v1/group/
+    return_codes: 201, 304, 500
+
+Code 304 stands for NOT MODIFIED and communicates to user that rollback was triggered.
+
+

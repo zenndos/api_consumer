@@ -28,9 +28,9 @@ docker build -t ${API_SERVER_IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile_Api_Server .
 docker build -t ${API_CONSUMER_IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile_Api_Consumer .
 docker build -t ${ROBOT_IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile_Robot .
 
-docker run -dti --hostname ${HOSTNAME_1} --add-host ${HOSTNAME_1}:${HOST_IP_1} --name ${CONTAINER_NAME_1} --network ${SUBNET_NAME} ${API_SERVER_IMAGE_NAME}:${IMAGE_TAG}
-docker run -dti --hostname ${HOSTNAME_2} --add-host ${HOSTNAME_2}:${HOST_IP_2} --name ${CONTAINER_NAME_2} --network ${SUBNET_NAME} ${API_SERVER_IMAGE_NAME}:${IMAGE_TAG}
-docker run -dti --hostname ${HOSTNAME_3} --add-host ${HOSTNAME_3}:${HOST_IP_3} --name ${CONTAINER_NAME_3} --network ${SUBNET_NAME} ${API_SERVER_IMAGE_NAME}:${IMAGE_TAG}
+docker run -dti --hostname ${HOSTNAME_1} --ip ${HOST_IP_1} --add-host ${HOSTNAME_1}:${HOST_IP_1} --name ${CONTAINER_NAME_1} --network ${SUBNET_NAME} ${API_SERVER_IMAGE_NAME}:${IMAGE_TAG}
+docker run -dti --hostname ${HOSTNAME_2} --ip ${HOST_IP_2} --add-host ${HOSTNAME_2}:${HOST_IP_2} --name ${CONTAINER_NAME_2} --network ${SUBNET_NAME} ${API_SERVER_IMAGE_NAME}:${IMAGE_TAG}
+docker run -dti --hostname ${HOSTNAME_3} --ip ${HOST_IP_3} --add-host ${HOSTNAME_3}:${HOST_IP_3} --name ${CONTAINER_NAME_3} --network ${SUBNET_NAME} ${API_SERVER_IMAGE_NAME}:${IMAGE_TAG}
 set -x
 docker run -dti -p 5001:5001 --name ${API_CONSUMER_CONTAINER_NAME} --ip ${CONSUMER_IP} --network ${SUBNET_NAME} --add-host ${HOSTNAME_1}:${HOST_IP_1} --add-host ${HOSTNAME_2}:${HOST_IP_2} --add-host ${HOSTNAME_3}:${HOST_IP_3} ${API_CONSUMER_IMAGE_NAME}:${IMAGE_TAG}
 docker run -dti --name ${ROBOT_CONTAINER_NAME} --network ${SUBNET_NAME} --add-host ${HOSTNAME_1}:${HOST_IP_1} --add-host ${HOSTNAME_2}:${HOST_IP_2} --add-host ${HOSTNAME_3}:${HOST_IP_3} -v ${SCRIPT_DIR}/test:/robot/ ${ROBOT_IMAGE_NAME}:${IMAGE_TAG}

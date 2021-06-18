@@ -1,0 +1,65 @@
+This project creates 3 api servers which run as containers in the private
+docker network, all having an ip and hostname assigned.
+
+network - 192.168.2.0/24
+
+test_server_1 - node01.app.internal.com - 192.168.2.1
+test_server_2 - node02.app.internal.com - 192.168.2.2
+test_server_3 - node03.app.internal.com - 192.168.2.3
+
+Each server runs on the port 5000.
+
+One can create and delete groups on each server, but the API is unstable
+(check random_error_response function in api_server.py) and there is a
+probability of timeour or random error.
+
+There is an api_consumer container running in the cluster:
+
+api_consumer - 192.168.2.4
+
+api-consumer runs on port 5001.
+
+One can make an API call towards the consumer, which will try to execute this
+API call on all servers. In case if error is encountered, api-consumer tries to
+rollback sucessfully affected hosts to the previous state.
+
+One can create the cluster by executing: ./bootstrap_docker_cluster.sh
+
+The script will create the cluster along with a verification container. This
+conatiner name is robot_verification, it will run a RobotFramework verification
+job. The job executes 3 tests on the api-consumer:
+
+Test Api Consumer Creates Group On All Hosts
+Test Api Consumer Deletes Group On All Hosts
+Test Api Servers Have Same Set Of Objects After Multiple Create Requests
+
+Wait until robot_verification container execution is finished (it will die as 
+soon as its done, it takes up to a few minutes), after that you can check the
+results in your favorite browser:
+
+    firefox test/output/log.html
+
+You can also proceed with manual testing:
+
+You can talk to the api-consumer staright from the host: 
+
+    curl --request POST --data '{"groupId": "19"}' -i http://localhost:5001/v1/group/
+
+If you want to talk to api servers themselves, you need to use docker exec and
+substitute the respective hostname into url:
+
+    docker exec test_server_1 curl --request POST --data '{"groupId": "19"}' -i http://node01.app.internal.com:5000/v1/group/
+
+Dont forget that servers and consumer are running on differnt ports! (5000 and 5001)
+
+You cannot reach node01 from node02, but you can reach all nodes from api_consumer.
+
+You can reach api-consumer and api-server logs with respective commands:
+
+    docker exec -ti api_consumer tail -f /tmp/api_consumer.log
+    docker exec -ti test_server_3 tail -f /tmp/api_server.log
+
+Please check API_SPECIFICATION for more details about the API.
+
+You can execute the cleanup with:
+   ./clear_docker_cluster.sh 

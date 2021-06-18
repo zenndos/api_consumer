@@ -16,7 +16,7 @@ from flask import Response
 from utils import setup_logger
 
 
-LOG = setup_logger()
+LOG = setup_logger('api_server')
 
 app = Flask(__name__)
 GROUPS = []

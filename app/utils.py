@@ -1,10 +1,10 @@
 import logging
 
-def setup_logger():
-    logger = logging.getLogger('http_server')
+def setup_logger(name):
+    logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
-    fh = logging.FileHandler('/tmp/api_server.log')
+    fh = logging.FileHandler(f'/tmp/{name}.log')
     ch.setLevel(logging.DEBUG)
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
