@@ -32,14 +32,14 @@ GET ALL GROUPS (for verification purposes):
 API Consumer:
 
 CREATE GROUP:
-    endpoint - {consumer_url}:5000/v1/group/
+    endpoint - {consumer_url}:5001/v1/group/
     method - POST
     json_body - {"groupId": "{groupId}"}
     example - curl --request POST --data '{"groupId": "19"}' -i http://localhost:5001/v1/group/
     return_codes: 201, 304, 500
 
 DELETE GROUP:
-    endpoint - {consumer_url}:5000/v1/group/
+    endpoint - {consumer_url}:5001/v1/group/
     method - DELETE
     json_body - {"groupId": "{groupId}"}
     example - curl --request DELETE --data '{"groupId": "19"}' -i http://localhost:5001/v1/group/
